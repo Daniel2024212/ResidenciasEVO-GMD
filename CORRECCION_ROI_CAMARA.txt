@@ -1,0 +1,21 @@
+CORRECCION DE ROI PARA FOTOGRAFIAS DE CAMARA
+
+Problema reproducido:
+- En la fotografía de prueba IMD065.jpg, la versión anterior seleccionaba una región de 20,885 píxeles de 720x480 (6.04% del encuadre), ubicada aproximadamente entre x=84..360, y=287..449.
+- La región seleccionada era solo un fragmento de la lesión y no representaba la zona completa que debía describir el banco Gabor.
+
+Cambios aplicados en RecortarROI.generarMascaraCamara:
+- Se utiliza el límite FRACCION_MAXIMA_ROI_CAMARA (0.92) tanto al filtrar componentes como al validar la máscara final; antes el código todavía rechazaba componentes mayores a 0.68 pese a declarar el límite 0.92.
+- Se permite que una lesión extensa llegue a dos o tres lados del área útil; antes se descartaban componentes que tocaban dos lados.
+- Se reduce la penalización exponencial que hacía que un fragmento pequeño venciera a una lesión amplia.
+- Se conserva una penalización para componentes que tocan los bordes y el límite superior de área para evitar aceptar una máscara que cubra prácticamente todo el encuadre.
+
+Prueba con IMD065.jpg (redimensionada igual que el procesamiento Android a 720x480):
+- ROI anterior: 6.04% del encuadre.
+- ROI con la corrección: 63.48% del encuadre; caja delimitadora x=36..651, y=24..455.
+- Prueba sintética de lesión central y sombra de esquina: la lesión central permanece incluida y la sombra de esquina se excluye.
+
+IMPORTANTE:
+- La prueba confirma que la segmentación ya no se reduce al pequeño fragmento observado en la captura. No confirma que la clasificación de esta fotografía deba ser Alta probabilidad ni garantiza una exactitud clínica.
+- No se modificaron etiquetas, probabilidades, pesos del SVM ni el archivo del modelo para forzar una clase.
+- La compilación APK debe verificarse en Android Studio con Android SDK/Gradle configurados.
